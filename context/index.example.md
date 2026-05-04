@@ -1,0 +1,4 @@
+- context/resume.pdf - My Resume
+- https://cjroth.com - My website including notable projects and writing.
+- context/thunderbolt - My current full-time project at Mozilla.
+- context/gridland - My side project that I built with my partner, Jessica Cheng.

@@ -1,0 +1,6 @@
+*.md
+!*.example.md
+!AGENTS.md
+!CLAUDE.md
+!README.md
+!.agents/skills/**/*.md

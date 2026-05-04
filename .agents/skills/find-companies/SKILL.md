@@ -23,16 +23,18 @@ Read these in parallel — everything downstream depends on them:
 Run `ls` against each of:
 
 - `companies/in-review/`
-- `companies/applied/` (if present)
+- `companies/interested/`
+- `companies/rejected/`
 - `applications/in-review/`
 - `applications/applied/`
 
-Any company that appears in any of these is already on the user's radar — skip it later.
+Any company that appears in any of these is already on the user's radar — skip it later. **Anything in `companies/rejected/` is a hard skip — never re-surface it.**
 
 ### 3. Generate a candidate list
 
 Use whatever web-search and page-fetch capability is available to assemble 10–20 candidate companies. Pull from:
 
+- **`companies/ideas.md`** — the user's free-form list of URLs, company names, and notes. Always include every entry here that doesn't already have a file under `companies/` or `applications/`. Format is loose: bare URLs, bare names, optional `- note` suffix, markdown headings as informal groupings.
 - The named-companies list in `preferences.md` (always include any that don't already have a file)
 - Industry peers in each target industry from `preferences.md`
 - Companies whose tech stack and product overlap with the user's resume and project work
@@ -40,14 +42,13 @@ Use whatever web-search and page-fetch capability is available to assemble 10–
 
 ### 4. Pre-filter the candidates
 
-Drop a candidate before researching if any of these are true:
+For each candidate, decide one of three outcomes before spending research effort:
 
-- Already exists under `companies/` or `applications/`
-- Violates an explicit deal-breaker in `preferences.md` (e.g. surveillance tech, defense contractors, gambling, crypto, politically-leaning, anything Elon-affiliated)
-- Clearly cannot meet the comp floor in `preferences.md`
-- Headquartered or only-hires somewhere outside the user's acceptable locations
+- **Skip silently** — already exists under `companies/in-review/`, `companies/interested/`, `companies/rejected/`, or `applications/`. Don't write anything.
+- **Reject** — clearly violates `preferences.md` (deal-breakers like surveillance tech, defense contractors, gambling, crypto, politically-leaning, anything Elon-affiliated; comp floor unmeetable; location incompatible). Write a short rejection file to `companies/rejected/<slug>.md` (see "Rejection file format" below) so it never gets re-surfaced.
+- **Research** — survives pre-filter; proceed to step 5.
 
-A short rejection note in your reply is fine — the user wants to see who got cut and why.
+Mention the rejected candidates in your reply too — the user wants to see who got cut and why.
 
 ### 5. Spawn one research subagent per surviving candidate, in parallel
 
@@ -59,23 +60,31 @@ Each sub-agent prompt must be **self-contained** — assume the sub-agent has no
 - A summary of the user's preferences and background it should match against (paste the relevant excerpts from `preferences.md` and `context/index.md` — do not just reference them by path; the sub-agent may not read the same files you did)
 - The full **File format** spec (below) so it writes the file correctly
 - The full **Research dimensions** list (below)
-- The exact output path: `companies/in-review/<slug>.md` (slug = lowercase, hyphenated)
+- The full **Match score calibration** rubric (below)
+- The output routing rule: **if final `match_score` ≥ 5**, write a dossier to `companies/in-review/<slug>.md`. **If `match_score` ≤ 4**, write a short rejection note to `companies/rejected/<slug>.md` instead (see "Rejection file format" below) — do NOT write a full dossier. Either way, one file per candidate so it never gets re-researched.
+- Slug rule: lowercase, hyphenated.
 - Instructions to use the host's web-search / page-fetch tools freely, cite sources inline as links, and never invent facts
-- A request for a one-line summary in its return message so this skill can render a final report
+- A request for a one-line summary AND the final `match_score` in its return message so this skill can render a final report
 
 If the host harness has no sub-agent mechanism, fall back to researching candidates sequentially in this same conversation, applying the same prompt template and writing the same files.
 
 ### 6. Render a summary table
 
-Once all subagents finish, present:
+Once all subagents finish, present two tables:
+
+**Researched (in-review)** — `match_score` ≥ 5, sorted by `match_score` descending:
 
 | Company | Industry | Match | Size | Why it fits (one line) |
 
-Sorted by `match_score` descending. Call out any companies a subagent flagged with serious concerns, and any candidates that were dropped in step 4 with a one-line reason.
+**Rejected** — pre-filter rejections from step 4 plus subagent rejections (`match_score` ≤ 4):
+
+| Company | Reason | File |
+
+Call out any companies a subagent flagged with serious concerns even if they cleared the threshold.
 
 ## File format
 
-Each company file lives at `companies/in-review/<slug>.md`. Frontmatter:
+Dossier files live at `companies/in-review/<slug>.md` (`match_score` ≥ 5). Frontmatter:
 
 ```yaml
 ---
@@ -108,6 +117,23 @@ Body sections (omit a section entirely if there is genuinely nothing verified to
 - `## Open roles` — careers page link; flag any roles matching titles in `preferences.md`
 - `## Sources` — full list of URLs cited above
 
+## Rejection file format
+
+Rejection files live at `companies/rejected/<slug>.md`. They exist so the skill (and any future skill) never re-researches a company that's already been ruled out. Keep them short — the point is the verdict, not a dossier. Frontmatter:
+
+```yaml
+---
+name: "Company Name"
+slug: company-slug
+match_score: 3                                     # 1-4, or omit if rejected at pre-filter (step 4)
+rejected_on: YYYY-MM-DD
+rejected_by: "find-companies"                      # the skill that wrote this
+reason: "defense contractor"                       # one short phrase; matches the body
+---
+```
+
+Body: 1–3 sentences explaining the rejection. Cite a source if the reason is a specific factual claim (e.g. "primary customer is the DoD — [source]"). No need for the full research dimensions.
+
 ## Research dimensions (paste into each subagent prompt)
 
 The subagent should investigate:
@@ -124,16 +150,17 @@ The subagent should investigate:
 
 ## Match score calibration
 
-- **9–10** — named in `preferences.md` specific-companies list, OR near-perfect fit on industry + role-level + culture + comp + location
-- **7–8** — strong fit on most dimensions; one or two soft mismatches
-- **5–6** — adjacent fit; worth knowing about but not a top target
-- **1–4** — drop the candidate; do not write a file
+- **9–10** — named in `preferences.md` specific-companies list, OR near-perfect fit on industry + role-level + culture + comp + location → `companies/in-review/`
+- **7–8** — strong fit on most dimensions; one or two soft mismatches → `companies/in-review/`
+- **5–6** — adjacent fit; worth knowing about but not a top target → `companies/in-review/`
+- **1–4** — below threshold; write a short rejection note to `companies/rejected/<slug>.md` so it never gets re-researched. Do NOT write a dossier.
 
 ## Constraints
 
 - **Never invent facts.** If something can't be verified, omit it or say "not publicly disclosed."
-- **Never overwrite** an existing file in `companies/in-review/`, `companies/applied/`, or `applications/`. Skip the candidate.
+- **Never overwrite** an existing file in `companies/in-review/`, `companies/interested/`, `companies/rejected/`, or `applications/`. Skip the candidate.
+- **Never re-surface a rejected company.** Anything in `companies/rejected/` is final unless the user explicitly removes it.
 - **Never submit applications.** This skill only surfaces companies for the user's review.
-- **One file per company** in `companies/in-review/`. Per-role tracking belongs in `applications/`.
+- **One file per company**, in either `companies/in-review/` or `companies/rejected/` based on `match_score`. Per-role tracking belongs in `applications/`.
 - **Cite every non-obvious claim.** Inline links in the body, full list in `## Sources`.
 - **Hard deal-breakers in `preferences.md` are absolute.** Do not surface a defense contractor or a crypto company because the match-score math otherwise looks good.

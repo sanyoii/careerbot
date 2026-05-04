@@ -7,6 +7,8 @@ description: Search for companies that match the user's background, skills, and 
 
 Surface companies the user should consider applying to, then queue each one for review with a deep research dossier. The user reviews and decides; this skill never submits applications.
 
+**Goal: end the run with at least 10 NEW dossiers in `companies/in-review/`** (i.e. 10 candidates that survived pre-filter and scored `match_score` ≥ 5). If the first research pass yields fewer than 10, generate more candidates and dispatch another round — repeat until the threshold is met or you've exhausted reasonable sources.
+
 ## Workflow
 
 ### 1. Load the user's context
@@ -28,17 +30,20 @@ Run `ls` against each of:
 - `applications/in-review/`
 - `applications/applied/`
 
-Any company that appears in any of these is already on the user's radar — skip it later. **Anything in `companies/rejected/` is a hard skip — never re-surface it.**
+Build a single set of "already-known slugs" from the union of these listings. **Every candidate generated in step 3 must be checked against this set before any research effort is spent.** A company in any of these folders — including `in-review/` and `interested/` — must not be researched again. **Anything in `companies/rejected/` is a hard skip — never re-surface it, not even under a different slug spelling.**
 
 ### 3. Generate a candidate list
 
-Use whatever web-search and page-fetch capability is available to assemble 10–20 candidate companies. Pull from:
+Use whatever web-search and page-fetch capability is available to assemble candidate companies. **Aim to surface enough candidates that at least 10 will survive pre-filter and score ≥ 5** — in practice that means generating ~15–25 candidates per pass, since some will dedup out, some will get pre-filtered, and some will score low. Pull from:
 
 - **`companies/ideas.md`** — the user's free-form list of URLs, company names, and notes. Always include every entry here that doesn't already have a file under `companies/` or `applications/`. Format is loose: bare URLs, bare names, optional `- note` suffix, markdown headings as informal groupings.
+- **"If you like X, you might like Y" look-alikes** — for each company already in `companies/ideas.md` AND each company in `companies/interested/`, generate 1–3 similar companies the user is likely to also like. "Similar" means competing in the same space, building adjacent products for the same audience, sharing engineering DNA (ex-employees, similar stack), or otherwise occupying the same niche. Skip the source company itself; only emit the look-alikes. This is the primary engine for expanding the candidate pool — lean on it.
 - The named-companies list in `preferences.md` (always include any that don't already have a file)
 - Industry peers in each target industry from `preferences.md`
 - Companies whose tech stack and product overlap with the user's resume and project work
 - Recently funded / notable companies in adjacent spaces
+
+**Before adding a candidate to the research queue, check it against the already-known-slugs set from step 2 and drop it if it matches.** Don't waste a subagent on a company that's already on file.
 
 ### 4. Pre-filter the candidates
 
@@ -68,7 +73,11 @@ Each sub-agent prompt must be **self-contained** — assume the sub-agent has no
 
 If the host harness has no sub-agent mechanism, fall back to researching candidates sequentially in this same conversation, applying the same prompt template and writing the same files.
 
-### 6. Render a summary table
+### 6. Top up if under 10 new dossiers
+
+After all subagents return, count the files this run added to `companies/in-review/`. **If that count is below 10**, return to step 3 and generate a fresh batch of candidates — biased toward dimensions you haven't exhausted yet (e.g. more look-alikes for `interested/` entries you haven't mined, different target industries, different funding stages). Re-apply step 2's dedup check (the already-known-slugs set has grown — include the dossiers and rejection notes you just wrote). Dispatch another parallel research round. Repeat until you've landed at least 10 new dossiers in `companies/in-review/`, or until you've genuinely exhausted plausible candidates (in which case say so explicitly in the final report).
+
+### 7. Render a summary table
 
 Once all subagents finish, present two tables:
 

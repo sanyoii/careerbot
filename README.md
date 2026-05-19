@@ -1,10 +1,10 @@
 # Careerbot
 
-An AI career assistant. It researches companies, finds matching open roles, drafts job applications, tracks their status through the full pipeline, and reuses your best answers across applications, so you stop re-writing the same "Why us?" essay every week.
+An AI career assistant. It researches companies, finds open roles that match your preferences, and drafts personalized answers for each application's form, drawing from your Answer Bank of raw material. The same reusable answers get pulled across applications, so you stop rewriting the same "Why us?" essay every week. You review every draft and submit each application yourself.
 
 ![Careerbot dashboard](./docs/dashboard.png)
 
-Careerbot stores **everything as local markdown files** under `applications/`, `companies/`, and `answer-bank/`. One file per application, company, or canonical answer. Status is encoded by the parent folder, so a status change is just a `git mv`.
+Careerbot stores **everything as local markdown files** under `applications/`, `companies/`, and `answer-bank/`. One file per application, company, or saved answer. Status is encoded by the parent folder, so a status change is just a `git mv`.
 
 
 ## Two ways to use it
@@ -46,7 +46,7 @@ These are the slash commands the AI agent exposes. Each one reads from and write
 | `/add-application` | Paste a job posting URL. Fetches the JD, drafts answers from your Answer Bank, auto-adds the company if not tracked. | `applications/in-review/<co>/<ats-id>-<title-slug>.md` |
 | `/find-roles` | Walks every interested company, scans its careers page, filters open roles against your preferences, drafts one application per match. Reuses Answer Bank entries. | `applications/in-review/<co>/<id>.md` |
 | `/seed-answer-bank` | Interactively fills any empty answer-bank stubs that `/find-roles` flagged as gaps. | `answer-bank/<theme>/<slug>.md` |
-| `/draft-missing-answers` | Re-synthesizes application answers left as TODOs or `[partial — pending: ...]` placeholders, once their underlying stubs are filled. | Edits in place under `applications/in-review/<co>/<id>.md` |
+| `/draft-missing-answers` | Re-synthesizes application answers left as TODOs or `[partial - pending: ...]` placeholders, once their underlying stubs are filled. | Edits in place under `applications/in-review/<co>/<id>.md` |
 | `/applicationstatus` | Moves an application between status folders and stamps the matching date field. | `git mv` between `applications/<status>/` folders |
 | `/commitandpush` | Commits and pushes the public parts of the repo while keeping every instance file private. | (repo operation, no markdown writes) |
 
@@ -109,4 +109,4 @@ Every status change is a `git mv` between status folders. The folder layout *is*
 
 ## License
 
-MIT — see [`LICENSE`](./LICENSE).
+MIT. See [`LICENSE`](./LICENSE).

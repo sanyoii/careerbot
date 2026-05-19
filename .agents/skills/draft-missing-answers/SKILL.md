@@ -1,6 +1,6 @@
 ---
 name: draft-missing-answers
-description: Walk every application markdown file under applications/in-review/, find Q&A sections that are empty, TODO placeholders, or `[partial — pending: ...]` essays whose pending stubs have since been filled, and re-synthesize them using the same gap-analysis + synthesis logic as /find-roles (identity verbatim, essay synthesis from satisfied inputs in the SCHEMA.md checklist). Skip any section with substantive user-revised content, all demographic sections, and any section whose required answer-bank inputs are still stubs. Use after /seed-answer-bank fills stubs that /find-roles generated, to bulk-rewrite the affected applications without touching the user's manual edits.
+description: Walk every application markdown file under applications/in-review/, find Q&A sections that are empty, TODO placeholders, or `[partial - pending: ...]` essays whose pending stubs have since been filled, and re-synthesize them using the same gap-analysis + synthesis logic as /find-roles (identity verbatim, essay synthesis from satisfied inputs in the SCHEMA.md checklist). Skip any section with substantive user-revised content, all demographic sections, and any section whose required answer-bank inputs are still stubs. Use after /seed-answer-bank fills stubs that /find-roles generated, to bulk-rewrite the affected applications without touching the user's manual edits.
 ---
 
 # Draft Missing Answers
@@ -88,14 +88,14 @@ For each section's `bodyText` (the section body, trimmed of leading/trailing bla
 | Starts with `TODO: needs answer` (the block `/find-roles` writes for an all-inputs-missing essay, followed by bullets pointing to `answer-bank/<theme>/<slug>.md` paths) | **yes** | Re-run gap analysis (step 5). If every referenced stub now has a non-empty body, full-synthesize. If some are filled, partial-synthesize. If none are filled, leave the TODO untouched. |
 | Starts with `TODO: synthesize once answer-bank/.../ is seeded` | **yes** | Legacy pattern. Re-run gap analysis the same way as above. |
 | Starts with `TODO:` (any other) | **yes** | Try to fill via classification (step 5). |
-| Ends with `[partial — pending: answer-bank/<theme>/<slug>, ...]` | **yes (conditional)** | Read the pending paths from the tag. If ANY of them now has a non-empty body, re-run gap analysis and re-synthesize (the new body may upgrade the essay from partial → full, or expand which inputs are satisfied). If none of the pending paths is newly filled, **skip** — the existing partial draft is still the best we can do, and the user may have hand-edited around the gaps. |
+| Ends with `[partial - pending: answer-bank/<theme>/<slug>, ...]` | **yes (conditional)** | Read the pending paths from the tag. If ANY of them now has a non-empty body, re-run gap analysis and re-synthesize (the new body may upgrade the essay from partial → full, or expand which inputs are satisfied). If none of the pending paths is newly filled, **skip** — the existing partial draft is still the best we can do, and the user may have hand-edited around the gaps. |
 | Equals `TODO: user fills in directly` | **no** | Skip. Always user-filled (demographic etc.). |
 | Ends with `[synthesized from: ...]` (no `partial`) | **no** | Skip. Already fully synthesized; don't churn unless the user manually re-TODOs it. |
 | Anything else | **no** | Skip. Substantive content. Do not overwrite. |
 
 Comparison is case-insensitive on the leading token (`TODO:`). Whitespace trim before comparing.
 
-For the `[partial — pending: ...]` check: parse the comma-separated paths inside the brackets. For each path, look up the file; if its body is non-empty (trimmed), it counts as "newly filled."
+For the `[partial - pending: ...]` check: parse the comma-separated paths inside the brackets. For each path, look up the file; if its body is non-empty (trimmed), it counts as "newly filled."
 
 ### 5. Synthesize eligible sections
 
@@ -113,7 +113,7 @@ Reuse the exact logic from `find-roles/SKILL.md` steps 6 → 7 → 8 — classif
 Synthesis behavior is the same three-way split as `/find-roles` step 8:
 
 - **All inputs satisfied** → full synthesis. Substrate from beliefs + stories + career + skills + voice + company profile + JD-specific phrasing (from the application's own `## Job description` section). End with `[synthesized from: answer-bank/<theme>/<slug>, ..., companies/interested/<co>.md]`.
-- **Some inputs satisfied** → partial synthesis using only the satisfied inputs. End with `[partial — pending: answer-bank/<theme>/<slug>, ...]` listing the still-unsatisfied paths. Do not include a `[synthesized from: ...]` tag in this case.
+- **Some inputs satisfied** → partial synthesis using only the satisfied inputs. End with `[partial - pending: answer-bank/<theme>/<slug>, ...]` listing the still-unsatisfied paths. Do not include a `[synthesized from: ...]` tag in this case.
 - **All inputs unsatisfied** → leave the existing TODO untouched (or, for an empty body, write the same TODO block `/find-roles` would write: one bullet per missing input, each citing the corresponding `answer-bank/<theme>/<slug>.md` path).
 
 **`/draft-missing-answers` does NOT generate new stubs.** Stub generation is `/find-roles`' responsibility at drafting time. This skill only consumes existing stubs and re-synthesizes essays as those stubs get filled. If gap analysis surfaces an input that has neither a filled entry nor a pending stub, treat the input as "gap" for the purposes of partial synthesis but do NOT write a new file under `answer-bank/`.
@@ -175,7 +175,7 @@ Do NOT commit. The user runs `/commitandpush` when ready.
 - **Only `applications/in-review/<co>/<id>.md` files.** Never read or write any other status folder. The presence of a file in `applied/`, `interview/`, etc. means it's been submitted or otherwise committed; we don't retroactively rewrite history.
 - **Never overwrite a section that has substantive content.** If the body doesn't match an eligible pattern in step 4, leave it alone. Even if it's terse, low-quality, or you think you could write a better version. The user is the source of truth on revised answers.
 - **Never write new stubs.** Stub generation belongs to `/find-roles` at drafting time. This skill consumes existing stubs; it never adds to `answer-bank/`.
-- **Never re-overwrite a `[partial — pending: ...]` essay with the same partial output.** If gap analysis shows the same satisfied-input set as before (none of the pending paths got filled), skip. The skill must be idempotent.
+- **Never re-overwrite a `[partial - pending: ...]` essay with the same partial output.** If gap analysis shows the same satisfied-input set as before (none of the pending paths got filled), skip. The skill must be idempotent.
 - **Never fabricate beliefs / stories / career / skills / voice.** If the relevant input is still a stub, leave the TODO. Falling back to context-only synthesis is explicitly out of scope.
 - **Never touch demographic sections.** The `TODO: user fills in directly` pattern is intentional and must remain.
 - **Never change the heading of a section.** Only the body lines between the heading and the next heading get rewritten.

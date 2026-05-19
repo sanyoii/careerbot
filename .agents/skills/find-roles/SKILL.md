@@ -284,9 +284,9 @@ Body has two top-level sections: `## Job description` (verbatim posting content)
     ```
   - **Some inputs satisfied, others pending or just-stubbed** → **partial synthesis** using only the satisfied inputs. Be honest about scope; don't pad with filler to compensate for missing inputs. End with a different tag listing the unsatisfied inputs the user still needs to answer:
     ```
-    [partial — pending: answer-bank/beliefs/<slug>, answer-bank/career/<slug>]
+    [partial - pending: answer-bank/beliefs/<slug>, answer-bank/career/<slug>]
     ```
-    Do NOT include a `[synthesized from: ...]` tag in this case; the `[partial — pending: ...]` tag is the only provenance line.
+    Do NOT include a `[synthesized from: ...]` tag in this case; the `[partial - pending: ...]` tag is the only provenance line.
   - **All inputs unsatisfied** (every required input is a stub or just-stubbed gap) → write a TODO block instead of prose. One bullet per missing input:
     ```
     TODO: needs answers for the following before this can be drafted:

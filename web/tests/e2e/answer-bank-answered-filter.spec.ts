@@ -60,7 +60,7 @@ test.describe("Answer Bank answered-state filter", () => {
     await setupMidPipeline();
     await page.goto("/answer-bank");
 
-    await page.getByRole("tab", { name: "Answered" }).click();
+    await page.getByRole("tab", { name: "Answered", exact: true }).click();
     await expect(page).toHaveURL(/[?&]answered=answered/);
 
     const list = page.getByRole("list");

@@ -4,7 +4,7 @@ An AI career assistant. It researches companies, finds matching open roles, draf
 
 ![Careerbot dashboard](./docs/dashboard.png)
 
-Careerbot stores **everything as local markdown files** under `applications/`, `companies/`, and `answer-bank/`. The schema is defined in [`SCHEMA.md`](./SCHEMA.md) and is designed to be loadable as-is into SQLite (one file = one row, typed YAML frontmatter, folder-encoded status, slug-based foreign keys).
+Careerbot stores **everything as local markdown files** under `applications/`, `companies/`, and `answer-bank/`. One file per application, company, or canonical answer. Status is encoded by the parent folder, so a status change is just a `git mv`.
 
 
 ## Two ways to use it
@@ -38,15 +38,17 @@ First time? Run `/onboard` in the CLI; it walks you through everything in step 1
 
 These are the slash commands the AI agent exposes. Each one reads from and writes to the markdown tree.
 
-- **`/onboard`** — first-run setup wizard. Walks you through `context/preferences.md` one section at a time and scaffolds anything missing.
-- **`/find-companies`** — finds companies matching your preferences and writes one markdown profile per match to `companies/in-review/<slug>.md`. Bad matches go to `companies/not-interested/<slug>.md` so they never get re-surfaced.
-- **`/add-company`** — lightweight single-target version: writes one file to `companies/interested/<slug>.md`.
-- **`/add-application`** — single-target counterpart to `/find-roles`. Paste one job posting URL; the skill fetches the JD, drafts answers from your Answer Bank, and writes one draft to `applications/in-review/<company>/<ats-id>-<title-slug>.md`. Auto-adds the company if not already tracked.
-- **`/find-roles`** — walks every company under `companies/interested/`, fetches its careers page, filters open roles against your preferences, and drafts one markdown file per match under `applications/in-review/<company>/<id>.md`, pre-filling form questions by reusing entries from `answer-bank/` where they exist.
-- **`/seed-answer-bank`** — interactively fills in any empty answer-bank stubs that `/find-roles` flagged as gaps.
-- **`/draft-missing-answers`** — re-synthesizes any application answers that were left as TODOs or `[partial — pending: ...]` placeholders, now that the underlying answer-bank stubs are filled.
-- **`/applicationstatus`** — moves an application's markdown file between status folders (`in-review/` → `applied/` → `interview/` → `rejected/` / `offered/` / `withdrawn/`) and stamps the matching `date_*` field in its frontmatter.
-- **`/commitandpush`** — commits and pushes the public parts of the repo (skills, docs, examples) while keeping every instance file under `applications/`, `companies/`, and `answer-bank/` private (auto-gitignored by `*.md` + whitelist rules).
+| Skill | What it does | Writes to |
+|---|---|---|
+| `/onboard` | First-run setup wizard. Walks you through preferences one section at a time. | `context/preferences.md` |
+| `/find-companies` | Finds companies matching your preferences and writes one profile per match. Bad matches go to a rejected/ folder so they never resurface. | `companies/in-review/<slug>.md` + `companies/not-interested/<slug>.md` |
+| `/add-company` | Lightweight single-target version of `/find-companies`. Add one company you already know you want. | `companies/interested/<slug>.md` |
+| `/add-application` | Paste a job posting URL. Fetches the JD, drafts answers from your Answer Bank, auto-adds the company if not tracked. | `applications/in-review/<co>/<ats-id>-<title-slug>.md` |
+| `/find-roles` | Walks every interested company, scans its careers page, filters open roles against your preferences, drafts one application per match. Reuses Answer Bank entries. | `applications/in-review/<co>/<id>.md` |
+| `/seed-answer-bank` | Interactively fills any empty answer-bank stubs that `/find-roles` flagged as gaps. | `answer-bank/<theme>/<slug>.md` |
+| `/draft-missing-answers` | Re-synthesizes application answers left as TODOs or `[partial — pending: ...]` placeholders, once their underlying stubs are filled. | Edits in place under `applications/in-review/<co>/<id>.md` |
+| `/applicationstatus` | Moves an application between status folders and stamps the matching date field. | `git mv` between `applications/<status>/` folders |
+| `/commitandpush` | Commits and pushes the public parts of the repo while keeping every instance file private. | (repo operation, no markdown writes) |
 
 
 ## Dashboard (web)
@@ -61,11 +63,13 @@ pnpm dev      # http://localhost:3000
 
 What you can do from the dashboard:
 
-- Browse applications, companies, and answer-bank entries as paginated, filterable lists.
+- Browse applications, companies, and answer-bank entries as filterable lists.
 - Open any item and edit its frontmatter or body inline; saves write back to the same markdown file.
 - Change status by moving a file between folders (e.g. mark an application as `applied`).
+- **AI Skills** page: a quick reference for every CLI skill with copy-paste examples, for when you forget the exact phrasing.
+- **Configuration** page: edit `context/preferences.md` (titles, comp floor, locations, deal-breakers) through a form instead of a text editor.
 
-By default the dashboard walks up from `process.cwd()` looking for `SCHEMA.md`. To point at a different repo, set `CAREERBOT_DATA_ROOT` to an absolute path in `web/.env.local`.
+By default the dashboard auto-detects the repo by walking up from `process.cwd()`. To point at a different repo, set `CAREERBOT_DATA_ROOT` to an absolute path in `web/.env.local`.
 
 
 ## Workflow
@@ -101,19 +105,6 @@ By default the dashboard walks up from `process.cwd()` looking for `SCHEMA.md`. 
 ```
 
 Every status change is a `git mv` between status folders. The folder layout *is* the status column, whether you trigger the move from the CLI or by clicking in the dashboard.
-
-
-## What's in the repo (public vs. private)
-
-| Public (tracked) | Private (gitignored) |
-|---|---|
-| `SCHEMA.md`, `README.md`, `AGENTS.md`, `CLAUDE.md` | `context/` (preferences, resume, projects) |
-| `.agents/skills/**` (skill code) | `applications/<status>/<company>/*.md` |
-| `web/` (Next.js dashboard) | `companies/<status>/*.md` (except `ideas.md`) |
-| `*.example.md` files | `answer-bank/<theme>/*.md` |
-| `.gitignore` whitelist rules | |
-
-The root `.gitignore` rule `*.md` ignores all markdown by default, then whitelists `AGENTS.md`, `CLAUDE.md`, `README.md`, `*.example.md`, and `.agents/skills/**/*.md`. So any new instance file under the three data folders is automatically private.
 
 
 ## License

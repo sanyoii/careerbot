@@ -4,3 +4,10 @@
 !CLAUDE.md
 !README.md
 !.agents/skills/**/*.md
+!web/tests/fixtures/**/*.md
+!SCHEMA.md
+
+# Local artifacts
+.playwright-mcp/
+before-answer-bank-filter.png
+after-answer-bank-filter.png

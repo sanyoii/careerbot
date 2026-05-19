@@ -164,7 +164,7 @@ export default async function AiSkillsPage({ searchParams }: PageProps) {
             </GlassCard>
 
             <GlassCard className="overflow-hidden">
-              <ul className="divide-y divide-zinc-200/60 dark:divide-white/10">
+              <ul className="list-divide">
                 {SKILLS.map((skill) => (
                   <SkillRow
                     key={skill.slug}
@@ -198,10 +198,7 @@ function SkillRow({ skill, active }: { skill: Skill; active: boolean }) {
     <li>
       <Link
         href={`/ai-skills?selected=${skill.slug}`}
-        className={cn(
-          "group flex items-center gap-4 px-5 py-4 transition-colors duration-150 hover:bg-zinc-900/[0.025] dark:hover:bg-white/[0.03]",
-          active && "bg-white/90 ring-1 ring-zinc-900/5 dark:bg-white/[0.08] dark:ring-white/10",
-        )}
+        className={cn("group list-row", active && "row-selected")}
       >
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">

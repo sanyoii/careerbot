@@ -164,4 +164,16 @@
   .dark .app-bg {
     background: oklch(0.13 0.01 260);
   }
+
+  /* List row patterns shared by applications/companies/answer-bank tabs + ai-skills page.
+     Pair with `group` on the same element if you want group-hover descendants to react. */
+  .list-row {
+    @apply flex items-center gap-4 px-5 py-4 transition-colors duration-150 hover:bg-zinc-900/[0.025] dark:hover:bg-white/[0.03];
+  }
+  .row-selected {
+    @apply bg-white/90 ring-1 ring-zinc-900/5 dark:bg-white/[0.08] dark:ring-white/10;
+  }
+  .list-divide {
+    @apply divide-y divide-zinc-200/60 dark:divide-white/10;
+  }
 }

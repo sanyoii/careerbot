@@ -1,0 +1,176 @@
+"use client";
+
+import * as React from "react";
+import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { ChevronRight } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { GlassCard } from "@/components/glass-card";
+import { StatusSelect } from "@/components/status-select";
+import { APPLICATION_STATUSES, type Application } from "@/lib/types";
+import { formatDate, formatSalaryRange } from "@/lib/format";
+import { cn } from "@/lib/utils";
+import { useTabIndicator } from "@/lib/use-tab-indicator";
+
+const SELECTED_ROW_CLASS =
+  "bg-white/90 ring-1 ring-zinc-900/5 dark:bg-white/[0.08] dark:ring-white/10";
+
+type TabSpec = { value: string; label: string };
+
+const TABS: TabSpec[] = [
+  { value: "all", label: "All" },
+  ...APPLICATION_STATUSES.map((s) => ({
+    value: s,
+    label: s
+      .split("-")
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" "),
+  })),
+];
+
+export function ApplicationsTabs({ applications }: { applications: Application[] }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const selectedId = searchParams.get("selected");
+  const [active, setActive] = React.useState("all");
+  const { listRef, setTriggerRef, indicator, firstPaint } = useTabIndicator(active);
+
+  // When the panel is open, swapping tabs should auto-select the first row of
+  // the new tab. If the currently-selected row already belongs to the new tab,
+  // keep it. If the new tab has no rows, push a sentinel so the panel stays
+  // open and renders an empty state.
+  React.useEffect(() => {
+    if (!selectedId) return; // panel closed — leave URL alone
+    const rows =
+      active === "all"
+        ? applications
+        : applications.filter((a) => a.status === active);
+    if (rows.some((r) => r.id === selectedId)) return;
+    const next = rows[0]?.id ?? "__empty__";
+    if (next === selectedId) return;
+    router.replace(`${pathname}?selected=${encodeURIComponent(next)}`);
+  }, [active, selectedId, applications, router, pathname]);
+
+  const counts = new Map<string, number>();
+  counts.set("all", applications.length);
+  for (const status of APPLICATION_STATUSES) counts.set(status, 0);
+  for (const app of applications) {
+    if (app.status && counts.has(app.status)) {
+      counts.set(app.status, counts.get(app.status)! + 1);
+    }
+  }
+
+  return (
+    <Tabs value={active} onValueChange={(v) => setActive(v ?? "all")} className="flex h-full flex-col gap-0">
+      <div className="shrink-0 border-b border-zinc-200/70 dark:border-white/10">
+        <TabsList
+          ref={listRef}
+          className="relative flex w-full flex-nowrap justify-start gap-1 overflow-x-auto bg-transparent p-0 group-data-horizontal/tabs:h-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          {/* Sliding underline: thick bar that hugs the baseline below the active tab */}
+          {indicator ? (
+            <div
+              aria-hidden
+              className={cn(
+                "pointer-events-none absolute -bottom-px left-0 z-10 h-[2.5px] rounded-full bg-zinc-900 dark:bg-white",
+                firstPaint ? "" : "transition-all duration-300 ease-out",
+              )}
+              style={{ transform: `translateX(${indicator.left}px)`, width: indicator.width }}
+            />
+          ) : null}
+
+          {TABS.map((tab) => {
+            const count = counts.get(tab.value) ?? 0;
+            const isActive = active === tab.value;
+            return (
+              <TabsTrigger
+                key={tab.value}
+                value={tab.value}
+                ref={setTriggerRef(tab.value)}
+                className={cn(
+                  "relative z-10 h-10 shrink-0 bg-transparent px-4 text-sm transition-colors",
+                  // A pseudo-element with the SAME insets as the sliding indicator,
+                  // so the hover bg matches the indicator's size + corner radius.
+                  "before:absolute before:inset-x-0 before:top-1 before:bottom-1.5 before:rounded-md before:transition-colors before:content-['']",
+                  // Strip Shadcn's built-in active bg/border so only our sliding indicator shows.
+                  "data-active:bg-transparent data-active:border-transparent data-active:shadow-none dark:data-active:bg-transparent dark:data-active:border-transparent",
+                  isActive
+                    ? "text-zinc-900 dark:text-zinc-50"
+                    : "text-zinc-500 hover:text-zinc-900 hover:before:bg-zinc-100/60 dark:text-zinc-400 dark:hover:text-zinc-50 dark:hover:before:bg-white/[0.04]",
+                )}
+              >
+                <span className={isActive ? "font-medium" : ""}>{tab.label}</span>
+                <span className="ml-1 text-xs tabular-nums text-zinc-500 dark:text-zinc-500">
+                  {count}
+                </span>
+              </TabsTrigger>
+            );
+          })}
+        </TabsList>
+      </div>
+
+      {TABS.map((tab) => {
+        const rows =
+          tab.value === "all"
+            ? applications
+            : applications.filter((a) => a.status === tab.value);
+        return (
+          <TabsContent
+            key={tab.value}
+            value={tab.value}
+            className="flex-1 overflow-y-auto pt-4 pb-8"
+          >
+            {rows.length === 0 ? (
+              <GlassCard className="p-10 text-center text-sm text-zinc-500">
+                No applications in this status.
+              </GlassCard>
+            ) : (
+              <GlassCard className="overflow-hidden">
+                <ul className="divide-y divide-zinc-200/60 dark:divide-white/10">
+                  {rows.map((app) => (
+                    <li key={app.id}>
+                      <Link
+                        href={`/applications?selected=${app.id}`}
+                        className={cn(
+                          "group flex items-center gap-4 px-5 py-4 transition-colors duration-150 hover:bg-zinc-900/[0.025] dark:hover:bg-white/[0.03]",
+                          app.id === selectedId && SELECTED_ROW_CLASS,
+                        )}
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="truncate font-medium tracking-tight text-zinc-900 dark:text-zinc-50">
+                              {app.title}
+                            </span>
+                          </div>
+                          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-500">
+                            {app.companyName ? (
+                              <span className="text-zinc-600 dark:text-zinc-400">
+                                {app.companyName}
+                              </span>
+                            ) : null}
+                            {app.location ? <span>{app.location}</span> : null}
+                            {app.salaryMin != null || app.salaryMax != null ? (
+                              <span>
+                                {formatSalaryRange(app.salaryMin, app.salaryMax)}
+                              </span>
+                            ) : null}
+                          </div>
+                        </div>
+                        <div className="hidden text-xs text-zinc-500 sm:block">
+                          {formatDate(app.dateFound)}
+                        </div>
+                        <StatusSelect kind="application" id={app.id} status={app.status} />
+                        <ChevronRight className="h-4 w-4 text-zinc-400 transition-transform duration-150 group-hover:translate-x-0.5 dark:text-zinc-500" />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </GlassCard>
+            )}
+          </TabsContent>
+        );
+      })}
+    </Tabs>
+  );
+}

@@ -19,7 +19,9 @@ import {
 import { formatSalaryRange, humanizeSlug } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useTabIndicator } from "@/lib/use-tab-indicator";
-import { ApplicationInReviewActions } from "@/components/application-in-review-actions";
+import { StatusActionBar } from "@/components/status-action-bar";
+import { updateApplication } from "@/app/applications/[id]/actions";
+import { type ApplicationStatus } from "@/lib/types";
 import type {
   Application,
   Company,
@@ -184,7 +186,13 @@ export function ApplicationDetailTabs({
       </TabsContent>
     </Tabs>
     {showInReviewActions && active === "jd" ? (
-      <ApplicationInReviewActions applicationId={application.id} />
+      <StatusActionBar<ApplicationStatus>
+        actions={[
+          { label: "Not interested", status: "not-interested", variant: "outline" },
+          { label: "Applied", status: "applied" },
+        ]}
+        update={(status) => updateApplication(application.id, { status })}
+      />
     ) : null}
     </>
   );

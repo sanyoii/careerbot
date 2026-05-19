@@ -1,8 +1,9 @@
 import { GlassCard } from "@/components/glass-card";
 import { MarkdownBlocks } from "@/components/markdown-blocks";
-import { CompanyInReviewActions } from "@/components/company-in-review-actions";
+import { StatusActionBar } from "@/components/status-action-bar";
+import { updateCompanyStatus } from "@/app/companies/[id]/actions";
 import { formatDate } from "@/lib/format";
-import type { Company, RenderableBlock } from "@/lib/types";
+import type { Company, CompanyStatus, RenderableBlock } from "@/lib/types";
 
 interface CompanyDetailProps {
   company: Company;
@@ -47,7 +48,13 @@ export function CompanyDetail({
       </div>
 
       {showInReviewActions ? (
-        <CompanyInReviewActions companyId={company.id} />
+        <StatusActionBar<CompanyStatus>
+          actions={[
+            { label: "Not interested", status: "not-interested", variant: "outline" },
+            { label: "Interested", status: "interested" },
+          ]}
+          update={updateCompanyStatus.bind(null, company.id)}
+        />
       ) : null}
     </>
   );

@@ -13,21 +13,13 @@ import {
   writeMarkdownFile,
 } from "@/lib/markdown-store";
 import { ANSWER_THEMES, type AnswerTheme } from "@/lib/types";
+import { enumOrUndefined } from "@/lib/enum";
 
 export interface AnswerBankUpdate {
   question?: string;
   theme?: AnswerTheme | null;
   tags?: string[];
   canonicalAnswer?: string | null;
-}
-
-function enumOrUndefined<T extends string>(
-  v: T | null | undefined,
-  allowed: readonly T[],
-): T | null | undefined {
-  if (v === undefined) return undefined;
-  if (v === null || v === "") return null;
-  return allowed.includes(v) ? v : undefined;
 }
 
 export async function updateAnswerBank(id: string, patch: AnswerBankUpdate) {

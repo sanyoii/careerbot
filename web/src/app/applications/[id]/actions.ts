@@ -19,6 +19,7 @@ import {
   type ApplicationSource,
   type ApplicationStatus,
 } from "@/lib/types";
+import { enumOrUndefined } from "@/lib/enum";
 
 export interface ApplicationUpdate {
   status?: ApplicationStatus | null;
@@ -30,15 +31,6 @@ export interface ApplicationUpdate {
   notes?: string | null;
   url?: string | null;
   matchScore?: number | null;
-}
-
-function enumOrUndefined<T extends string>(
-  v: T | null | undefined,
-  allowed: readonly T[],
-): T | null | undefined {
-  if (v === undefined) return undefined;
-  if (v === null || v === "") return null;
-  return allowed.includes(v) ? v : undefined;
 }
 
 export async function updateApplication(id: string, patch: ApplicationUpdate) {

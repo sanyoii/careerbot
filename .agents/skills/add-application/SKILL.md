@@ -132,7 +132,7 @@ Direct reuse of `.agents/skills/find-roles/SKILL.md` steps 6-8. Summary:
 
 **Stub generation is allowed** in this skill (same as `/find-roles`). Only `/draft-missing-answers` is the read-only counterpart that never writes new stubs.
 
-Anchor every essay to concrete experience from `context/` (resume, projects, personal site) and to JD-specific phrasing. Same drafting guidance as `find-roles/SKILL.md` step 8: tight cover letters, no generic "I'm passionate about" filler, no fabrication.
+Anchor every essay to concrete experience from `context/` (resume, projects, personal site) and to JD-specific phrasing. Same drafting guidance as `find-roles/SKILL.md` step 6d (especially the `context/index.md` one-hop link-following rule for project-naming essays) and step 8: tight cover letters, no generic "I'm passionate about" filler, no fabrication.
 
 ### 9. Write the file
 

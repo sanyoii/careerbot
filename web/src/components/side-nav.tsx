@@ -120,8 +120,21 @@ function Brand({ collapsed }: { collapsed: boolean }) {
         collapsed ? "justify-center px-0" : "px-1",
       )}
     >
-      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-zinc-900 to-zinc-700 text-xs font-semibold text-white shadow-sm dark:from-zinc-100 dark:to-zinc-300 dark:text-zinc-900">
-        cb
+      <div className="relative h-8 w-8 shrink-0">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/careerbot-mark-ink.svg"
+          alt=""
+          aria-hidden
+          className="absolute inset-0 h-full w-full dark:hidden"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/careerbot-mark-paper.svg"
+          alt=""
+          aria-hidden
+          className="absolute inset-0 hidden h-full w-full dark:block"
+        />
       </div>
       {collapsed ? null : (
         <span className="text-sm font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">

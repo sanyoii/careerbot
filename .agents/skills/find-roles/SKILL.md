@@ -18,7 +18,7 @@ The `companies/`, `applications/`, and `answer-bank/` folders exist. `SCHEMA.md`
 Load context in this order:
 
 1. **`context/preferences.md`** — required filter. Defines target titles, comp floor, location, industries, must-avoid culture/ethics constraints. Treat the avoid list as a hard filter.
-2. **`context/index.md`** — entry point. Follow its links to project folders, the resume, personal site, and any other supporting material.
+2. **`context/index.md`** — entry point. Read it and build a map of the links it exposes (file paths to project folders / docs, URLs to personal site / portfolio, the resume). Don't fetch link contents yet; step 6d decides when to.
 3. **`context/resume.pdf`** — read for concrete experience to draw on when drafting.
 4. **`companies/interested/*.md`** — every file under here is a company to scan. For each one, read the frontmatter (name, slug, industry, etc.) and the body (profile) for context. The slug = the filename without `.md`.
 
@@ -131,7 +131,12 @@ If the question doesn't match any of the listed patterns cleanly, pick the close
 
 Take the top 1–2 candidates per essay.
 
-**d) Always anchor to context** — `context/preferences.md`, `context/index.md`, `context/resume.pdf`. The Answer Bank is the user's voice; `context/` is their factual ground truth.
+**d) Always anchor to context.** The Answer Bank is the user's voice; `context/` is their factual ground truth.
+
+- `context/preferences.md` — voice and constraint rules apply to every essay.
+- `context/resume.pdf` — pull dates, employers, stack, and project names from here. Don't fabricate any of these.
+- `context/index.md` — for any essay that names or describes a specific project (patterns: "Why this role?", "Tell us about a project", "Leadership example", "Design process", "Experience with AI", cover letter), follow up to two `index.md` entries most relevant to the essay's tag. Read file paths via Read; WebFetch URLs only when they point to the user's own site (portfolio / blog). Cap at one hop, no recursive crawl. Cite each source actually consulted in the `[synthesized from: ...]` tag.
+- `context/` inputs are best-effort. If no `index.md` link matches the essay's tag, degrade to resume-only synthesis. Don't write a TODO and don't stub. Gap-generating inputs are answer-bank only.
 
 ### 7. Gap analysis and stub generation
 

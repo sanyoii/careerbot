@@ -118,7 +118,7 @@ Synthesis behavior is the same three-way split as `/find-roles` step 8:
 
 **`/draft-missing-answers` does NOT generate new stubs.** Stub generation is `/find-roles`' responsibility at drafting time. This skill only consumes existing stubs and re-synthesizes essays as those stubs get filled. If gap analysis surfaces an input that has neither a filled entry nor a pending stub, treat the input as "gap" for the purposes of partial synthesis but do NOT write a new file under `answer-bank/`.
 
-**c) Always anchor essay synthesis to `context/`** — resume facts and personal context — same rule as `/find-roles`. Don't fabricate experiences.
+**c) Always anchor essay synthesis to `context/`** (resume facts, personal context, `index.md`-linked project material). Follow the same rule as `/find-roles` step 6d, including one-hop link following from `context/index.md` for project-naming essays. Cite any `context/` files actually consulted in the `[synthesized from: ...]` tag. Don't fabricate experiences.
 
 **d) Voice rule** — **never use em dashes (`—`) in any drafted prose.** Substitute with commas, periods, parens, or rewrite. Per `context/preferences.md` Voice rule. Hyphens (`-`) and en dashes (`–`) are fine.
 

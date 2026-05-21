@@ -138,7 +138,11 @@ Anchor every essay to concrete experience from `context/` (resume, projects, per
 
 Compute the filename slug: lowercase the job title, strip punctuation, replace whitespace with `-`, cap at ~60 chars. Concat with the ATS ID: `<ats-id>-<title-slug>.md`.
 
-Write to `applications/in-review/<company-slug>/<ats-id>-<title-slug>.md` (create the company subdirectory if needed). Frontmatter per the Applications section of `SCHEMA.md`:
+Write to `applications/in-review/<company-slug>/<ats-id>-<title-slug>.md` (create the company subdirectory if needed). Frontmatter per the Applications section of `SCHEMA.md`.
+
+**YAML quoting (CRITICAL):** wrap every string value in double quotes when its content contains a `:`, `#`, leading `-`/`*`/`&`/`!`/`?`/`|`/`>`/`%`/`@`/backtick, or could be parsed as a YAML type (`yes`, `no`, `null`, a bare number, an ISO date). Job titles often contain `:` (e.g. "Product Designer, Claude: Code"); the `title:`, `url:`, and `location:` fields are the highest-risk surfaces. An unquoted `:` breaks the entire dashboard's frontmatter parse, not just one row. When in doubt, quote.
+
+Frontmatter spec:
 
 ```yaml
 ---

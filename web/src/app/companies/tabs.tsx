@@ -11,6 +11,7 @@ import { TabBar } from "@/components/tab-bar";
 import { COMPANY_STATUSES, type Company } from "@/lib/types";
 import { humanizeSlug } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { rowHref } from "@/lib/row-href";
 
 type TabSpec = { value: string; label: string };
 
@@ -54,12 +55,7 @@ export function CompaniesTabs({ companies }: { companies: Company[] }) {
     }
   }
 
-  // Preserve any existing search params (e.g. `selected`) when linking to a row.
-  const rowHref = (id: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("selected", id);
-    return `/companies?${params.toString()}`;
-  };
+  const linkHref = (id: string) => rowHref("/companies", id, searchParams);
 
   return (
     <Tabs value={active} onValueChange={(v) => setActive(v ?? "all")} className="flex h-full flex-col gap-0">
@@ -86,7 +82,7 @@ export function CompaniesTabs({ companies }: { companies: Company[] }) {
                   {rows.map((company) => (
                     <li key={company.id}>
                       <Link
-                        href={rowHref(company.id)}
+                        href={linkHref(company.id)}
                         className={cn(
                           "group list-row",
                           company.id === selectedId && "row-selected",

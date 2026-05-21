@@ -2,16 +2,10 @@
 
 import * as React from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { ExternalLink, XIcon } from "lucide-react";
+import { XIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 
 interface DetailSheetProps {
   /** When false, the panel animates out and then unmounts. Parents can pass
@@ -20,10 +14,6 @@ interface DetailSheetProps {
   open: boolean;
   title: string;
   subtitle?: string | null;
-  /** When set, the title renders as an external link to this URL with a
-   *  hover tooltip showing the destination hostname and an external-link
-   *  icon. */
-  href?: string | null;
   /** Optional element rendered inline right after the title (e.g. a copy button). */
   titleAction?: React.ReactNode;
   children: React.ReactNode;
@@ -31,14 +21,6 @@ interface DetailSheetProps {
    *  (or resolves to) false, the close is aborted. Use this to surface an
    *  "unsaved changes" confirmation. */
   onBeforeClose?: () => boolean | Promise<boolean>;
-}
-
-function hostnameOf(url: string): string {
-  try {
-    return new URL(url).hostname.replace(/^www\./, "");
-  } catch {
-    return url;
-  }
 }
 
 const DEFAULT_WIDTH_PX = 560;
@@ -56,7 +38,6 @@ const SLIDE_MS = 320;
 interface LatchedProps {
   title: string;
   subtitle: string | null | undefined;
-  href: string | null | undefined;
   titleAction: React.ReactNode;
   children: React.ReactNode;
 }
@@ -79,7 +60,6 @@ export function DetailSheet({
   open,
   title,
   subtitle,
-  href,
   titleAction,
   children,
   onBeforeClose,
@@ -126,12 +106,11 @@ export function DetailSheet({
   const latched = React.useRef<LatchedProps>({
     title,
     subtitle,
-    href,
     titleAction,
     children,
   });
   if (isOpen) {
-    latched.current = { title, subtitle, href, titleAction, children };
+    latched.current = { title, subtitle, titleAction, children };
   }
 
   // Hydrate width: a saved preference wins; otherwise default to 50% of the
@@ -205,7 +184,6 @@ export function DetailSheet({
   const {
     title: latchedTitle,
     subtitle: latchedSubtitle,
-    href: latchedHref,
     titleAction: latchedAction,
     children: latchedChildren,
   } = latched.current;
@@ -260,33 +238,9 @@ export function DetailSheet({
               {latchedSubtitle}
             </span>
           ) : null}
-          {latchedHref ? (
-            <TooltipProvider delay={0}>
-              <Tooltip>
-                <TooltipTrigger
-                  render={
-                    <a
-                      href={latchedHref}
-                      target="_blank"
-                      rel="noreferrer"
-                      aria-label={`${latchedTitle} (opens in new tab)`}
-                      className="group/title inline-flex min-w-0 items-center gap-1.5 rounded-md text-zinc-900 transition-colors hover:text-blue-600 dark:text-zinc-50 dark:hover:text-blue-400"
-                    >
-                      <h2 className="min-w-0 truncate font-heading text-base font-semibold tracking-tight">
-                        {latchedTitle}
-                      </h2>
-                      <ExternalLink className="h-3.5 w-3.5 shrink-0 text-zinc-900 transition-colors group-hover/title:text-blue-600 dark:text-zinc-50 dark:group-hover/title:text-blue-400" />
-                    </a>
-                  }
-                />
-                <TooltipContent>Open on {hostnameOf(latchedHref)}</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          ) : (
-            <h2 className="min-w-0 truncate font-heading text-base font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-              {latchedTitle}
-            </h2>
-          )}
+          <h2 className="min-w-0 truncate font-heading text-base font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+            {latchedTitle}
+          </h2>
           {latchedAction}
         </div>
         <div className="flex shrink-0 items-center gap-2">

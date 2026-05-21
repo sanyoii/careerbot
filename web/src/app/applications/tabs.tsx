@@ -11,6 +11,7 @@ import { TabBar } from "@/components/tab-bar";
 import { APPLICATION_STATUSES, type Application } from "@/lib/types";
 import { formatSalaryRange } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { rowHref } from "@/lib/row-href";
 import { useApplicationsSearch } from "./search-context";
 
 type TabSpec = { value: string; label: string };
@@ -96,7 +97,7 @@ export function ApplicationsTabs({ applications }: { applications: Application[]
                   {rows.map((app) => (
                     <li key={app.id}>
                       <Link
-                        href={`/applications?selected=${app.id}`}
+                        href={rowHref("/applications", app.id, searchParams)}
                         className={cn(
                           "group list-row",
                           app.id === selectedId && "row-selected",

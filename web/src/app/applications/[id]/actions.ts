@@ -24,11 +24,9 @@ import { enumOrUndefined } from "@/lib/enum";
 export interface ApplicationUpdate {
   status?: ApplicationStatus | null;
   source?: ApplicationSource | null;
-  dateFound?: string | null;
   salaryMin?: number | null;
   salaryMax?: number | null;
   location?: string | null;
-  notes?: string | null;
   url?: string | null;
   matchScore?: number | null;
 }
@@ -43,12 +41,10 @@ export async function updateApplication(id: string, patch: ApplicationUpdate) {
   const fmPatch: Record<string, unknown> = {};
   const src = enumOrUndefined(patch.source, APPLICATION_SOURCES);
   if (src !== undefined) fmPatch.source = src;
-  if (patch.dateFound !== undefined) fmPatch.date_found = patch.dateFound;
   if (patch.salaryMin !== undefined) fmPatch.salary_min = patch.salaryMin;
   if (patch.salaryMax !== undefined) fmPatch.salary_max = patch.salaryMax;
   if (patch.matchScore !== undefined) fmPatch.match_score = patch.matchScore;
   if (patch.location !== undefined) fmPatch.location = patch.location;
-  if (patch.notes !== undefined) fmPatch.notes = patch.notes;
   if (patch.url !== undefined) fmPatch.url = patch.url;
 
   if (Object.keys(fmPatch).length > 0) {

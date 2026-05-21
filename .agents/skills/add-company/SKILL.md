@@ -87,6 +87,8 @@ not_interested_reason: null
 
 Use the Write tool. `match_score`, `headcount`, `stage`, `valuation`, `offices` are intentionally null/empty — `/add-company` is the lightweight path; those fields are populated by `/find-companies` or by hand.
 
+**YAML quoting (CRITICAL):** wrap any string value (`name:`, `hq:`) in double quotes when its content contains a `:`, `#`, leading `-`/`*`/`&`/`!`/`?`/`|`/`>`/`%`/`@`/backtick, or could be parsed as a YAML type (`yes`, `no`, `null`, a bare number, an ISO date). An unquoted `:` in a string breaks the entire dashboard's frontmatter parse. When in doubt, quote.
+
 ### 5. Report back
 
 Print:

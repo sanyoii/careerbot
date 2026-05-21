@@ -15,12 +15,21 @@ export default defineConfig({
     baseURL: BASE_URL,
     trace: "retain-on-failure",
   },
+  // Use `next build && next start` instead of `next dev` so the test server
+  // is independent of the developer's local `pnpm dev`. Next.js 16 holds a
+  // per-project dev-mode lock at `.next/dev/lock` that refuses to spawn a
+  // second `next dev` even on a different port — production-mode start has
+  // no such lock. The NEXT_TEST_BUILD env var (read by next.config.ts) flips
+  // distDir to `.next-test` so the test build doesn't trample the dev cache.
   webServer: {
-    command: `pnpm dev --port ${PORT}`,
+    command: `pnpm exec next build && pnpm exec next start --port ${PORT}`,
     url: BASE_URL,
-    reuseExistingServer: false,
-    timeout: 120_000,
-    env: { CAREERBOT_DATA_ROOT: DATA_ROOT },
+    reuseExistingServer: true,
+    timeout: 300_000,
+    env: {
+      CAREERBOT_DATA_ROOT: DATA_ROOT,
+      NEXT_TEST_BUILD: "1",
+    },
     stdout: "pipe",
     stderr: "pipe",
   },

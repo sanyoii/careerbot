@@ -14,6 +14,7 @@ import {
 } from "@/lib/types";
 import { formatDate, humanizeSlug } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { rowHref } from "@/lib/row-href";
 import { useUnsavedChanges } from "@/components/unsaved-changes";
 import {
   parseAnsweredFilter,
@@ -66,11 +67,7 @@ export function AnswerBankTabs({ entries }: { entries: AnswerBankEntry[] }) {
     TABS.map((tab) => [tab.value, rowsFor(tab.value, answered, entries).length]),
   );
 
-  const rowHref = (id: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("selected", id);
-    return `/answer-bank?${params.toString()}`;
-  };
+  const linkHref = (id: string) => rowHref("/answer-bank", id, searchParams);
 
   // When the editor has unsaved changes, navigating to another row should
   // warn first. We synchronously preventDefault, then defer the actual
@@ -125,8 +122,8 @@ export function AnswerBankTabs({ entries }: { entries: AnswerBankEntry[] }) {
                   {rows.map((entry) => (
                     <li key={entry.id}>
                       <Link
-                        href={rowHref(entry.id)}
-                        onClick={(e) => onRowClick(e, rowHref(entry.id))}
+                        href={linkHref(entry.id)}
+                        onClick={(e) => onRowClick(e, linkHref(entry.id))}
                         className={cn(
                           "group list-row",
                           entry.id === selectedId && "row-selected",

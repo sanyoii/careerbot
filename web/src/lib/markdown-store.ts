@@ -149,7 +149,18 @@ async function loadEntity<T>(
       fs.readFile(abs, "utf8"),
       mtimeOf(abs),
     ]);
-    const parsed = matter(raw);
+    let parsed: ReturnType<typeof matter>;
+    try {
+      parsed = matter(raw);
+    } catch (err) {
+      // Malformed frontmatter (typically an unquoted YAML value with an
+      // inline `:` or other special char). Skip the file rather than crashing
+      // the whole tree walk — one bad file shouldn't take down the page.
+      console.warn(
+        `[markdown-store] Skipping ${abs}: ${(err as Error).message}`,
+      );
+      continue;
+    }
     out.push({
       data: parsed.data as Record<string, unknown>,
       body: parsed.content,

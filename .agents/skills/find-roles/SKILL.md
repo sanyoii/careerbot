@@ -244,7 +244,11 @@ When you encounter a gap that maps to a catalog row, the file content is fully p
 
 Decide the filename slug: take the job title, lowercase, strip punctuation, replace whitespace with `-`, limit to ~60 chars. Concat with the ATS ID: `<ats-id>-<title-slug>.md`.
 
-Write the file to `applications/in-review/<company-slug>/<ats-id>-<title-slug>.md` with frontmatter per `SCHEMA.md`:
+Write the file to `applications/in-review/<company-slug>/<ats-id>-<title-slug>.md` with frontmatter per `SCHEMA.md`.
+
+**YAML quoting (CRITICAL):** wrap every string value in double quotes when its content contains a `:`, a `#`, a leading `-`/`*`/`&`/`!`/`?`/`|`/`>`/`%`/`@`/backtick, or could be read as a YAML type (`yes`, `no`, `null`, a bare number, an ISO date). Job titles often contain colons (e.g. "Product Designer, Claude: Code"); the `title:`, `url:`, and `location:` fields are the highest-risk surfaces. An unquoted `:` breaks the entire dashboard's frontmatter parse, not just one row. When in doubt, quote.
+
+Frontmatter spec:
 
 ```yaml
 ---

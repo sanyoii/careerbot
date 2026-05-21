@@ -127,6 +127,17 @@ Do NOT commit. The user runs `/commitandpush` when ready (and instance files und
 
 Each profile is a new markdown file written via the Write tool. Path = `companies/<status>/<slug>.md` where `<status>` is `in-review` (match_score ≥ 5) or `not-interested` (match_score ≤ 4).
 
+### YAML quoting rules (CRITICAL — past runs have broken the dashboard)
+
+YAML will silently mis-parse unquoted string values that contain certain characters, taking down the entire web UI. **Wrap any string value in double quotes when its content contains any of these:**
+
+- A colon `:` anywhere in the value (e.g. `stage: "public (NYSE: FSLY)"`, never `stage: public (NYSE: FSLY)` — YAML reads the inline `:` as a nested mapping and the whole frontmatter fails to parse).
+- A `#` (read as a comment start).
+- Leading whitespace, a leading `-`, `*`, `&`, `!`, `?`, `|`, `>`, `%`, `@`, or backtick.
+- A value that could be interpreted as a YAML type (`yes`, `no`, `on`, `off`, `null`, `~`, a bare number like `2.0`, or an ISO date).
+
+Common offenders in this skill's output: `stage:` ("public (NYSE: NET)"), `valuation:` ("$95B market cap (May 2026)" — parens are fine but if you ever add a `:`, quote), `headcount:` (e.g. "~5,000 (post-layoff)"), `remote_policy:` (must be the bare enum `remote` | `hybrid` | `onsite` — do NOT add qualifiers like "hybrid (flexible)"; put qualifiers in the body). When in doubt, quote.
+
 **Frontmatter (for `match_score` ≥ 5):**
 
 ```yaml

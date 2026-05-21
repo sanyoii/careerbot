@@ -13,6 +13,7 @@ There are three entities: **Applications**, **Companies**, **Answer Bank**. Each
 - **Foreign keys are slugs.** Never page IDs, never absolute paths.
 - **Dates are ISO-8601 `YYYY-MM-DD`.** Bare, unquoted in YAML.
 - **Booleans are `true` / `false`.** Don't use yes/no.
+- **Quote any string value that contains a `:`, `#`, leading `-`/`*`/`&`/`!`/`?`/`|`/`>`/`%`/`@`/backtick, or could be read as a YAML type** (`yes`, `no`, `null`, a bare number, an ISO date). Unquoted inline `:` in particular breaks the entire dashboard's frontmatter parse: a value like `stage: public (NYSE: FSLY)` must be written `stage: "public (NYSE: FSLY)"`. When in doubt, quote.
 
 ## Folder-as-status
 
@@ -47,11 +48,11 @@ Status changes are filesystem moves (`git mv`). The frontmatter never repeats th
 | `ats_id` | string | yes | Quoted in YAML; may be alphanumeric |
 | `url` | string | yes | Full canonical posting URL |
 | `source` | enum | no | `greenhouse` \| `lever` \| `ashby` \| `workday` \| `careers-page` \| `other` |
-| `date_found` | date | no | When the role was discovered |
+| `date_found` | date | no | **Deprecated** — still parsed for back-compat but no UI reads or writes it. Safe to omit on new applications. |
 | `salary_min` | integer | no | USD; bare number, no `$` |
 | `salary_max` | integer | no | USD |
 | `location` | string | no | As stated in posting |
-| `notes` | string | no | Short; long-form goes in body |
+| `notes` | string | no | **Deprecated** — still parsed for back-compat but no UI reads or writes it. Safe to omit on new applications. |
 
 ### Body
 

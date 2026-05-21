@@ -43,16 +43,35 @@ For applications, collect the company-slug segment of the path: `applications/*/
 
 ### 3. Generate a candidate list
 
-Use whatever web-search and page-fetch capability is available to assemble candidate companies. **Aim to surface enough candidates that at least 10 will survive pre-filter and score ≥ 5** — in practice that means generating ~15–25 candidates per pass, since some will dedup out, some will get pre-filtered, and some will score low. Pull from:
+Use whatever web-search and page-fetch capability is available to assemble candidate companies. **Aim to surface enough candidates that at least 10 will survive pre-filter and score ≥ 5** — in practice that means generating ~15–25 candidates per pass, since some will dedup out, some will get pre-filtered, and some will score low.
+
+Pull from two buckets: **Seed** (always include) and **Discovery** (required quota).
+
+#### 3a. Seed bucket (always include)
 
 - **`companies/ideas.md`** — always include every entry here that doesn't already exist in `companies/`. Format is loose: bare URLs, bare names, optional `- note` suffix, markdown headings as informal groupings.
-- **"If you like X, you might like Y" look-alikes** — for each company in `companies/ideas.md` AND each company under `companies/interested/`, generate 1–3 similar companies the user is likely to also like. "Similar" means competing in the same space, building adjacent products for the same audience, sharing engineering DNA (ex-employees, similar stack), or otherwise occupying the same niche. Skip the source company itself; only emit the look-alikes. This is the primary engine for expanding the candidate pool — lean on it.
+- **"If you like X, you might like Y" look-alikes** — for each company in `companies/ideas.md` AND each company under `companies/interested/`, generate 1–3 similar companies. "Similar" means competing in the same space, building adjacent products for the same audience, sharing engineering DNA (ex-employees, similar stack), or otherwise occupying the same niche. Skip the source company itself; only emit the look-alikes.
 - The named-companies list in `preferences.md` (always include any not already on file).
 - Industry peers in each target industry from `preferences.md`.
 - Companies whose tech stack and product overlap with the user's resume and project work.
-- Recently funded / notable companies in adjacent spaces.
 
-**Before adding a candidate to the research queue, check it against the already-known set from step 2 and drop it if it matches.** Don't waste a subagent on a company that's already on file.
+#### 3b. Discovery sources (required — at least 8 candidates per round)
+
+Look-alikes and seeds skew toward famous names the user already knows. To surface startups the user wouldn't otherwise see, **at least 8 of each round's candidates must come from these directories** (not the seed bucket above). Actually fetch the pages — don't generate from memory.
+
+- **Y Combinator company directory** — `https://www.ycombinator.com/companies` filtered by industry (`AI`, `Developer Tools`, `Design Tools`, `Consumer`), stage (`Active`), and recent batches (e.g. `W24`, `S24`, `W25`, `S25`, `F25`, `W26`). Page through results — don't stop at page 1.
+- **Wellfound (AngelList Talent)** — `https://wellfound.com/startups` filtered by industry tags matching `preferences.md` and Series A–C.
+- **Product Hunt category leaders** — `https://www.producthunt.com/categories/{ai,design-tools,developer-tools,productivity}` recent launches, then trace each launch back to the company behind it.
+- **Recently funded lists** — TechCrunch / The Information / Crunchbase News funding-announcement roundups for the last 90 days, filtered to seed–Series C in target industries.
+- **GitHub trending** — `https://github.com/trending?since=monthly` filtered to languages/topics from `preferences.md` (TypeScript, React, design-systems, AI), then look up the company behind notable repos.
+
+A candidate counts toward the Discovery quota only if the user is unlikely to already know it. Rough proxy: if it would appear in the top 50 results for "best AI startups 2025" or "best design tools 2025," it does NOT count toward Discovery — put it in Seed (look-alike bucket) instead. If a round comes back with only household names, redo candidate generation with heavier weight on YC/Wellfound directory pages 2–5, not page 1.
+
+#### 3c. Dedup and label
+
+**Before adding a candidate to the research queue, check it against the already-known set from step 2 and drop it if it matches.** When checking against `not-interested/`, normalize for common slug variants (e.g. `cal-com` vs `calcom`, `hugging-face` vs `huggingface`) before deciding. Don't waste a subagent on a company that's already on file.
+
+Track each surviving candidate's source so the final summary table (step 7) can label it: `Discovery (YC W25)`, `Discovery (Wellfound)`, `Look-alike (Linear)`, `Seed (ideas.md)`, `Seed (preferences.md)`, etc.
 
 ### 4. Pre-filter the candidates
 
@@ -92,7 +111,9 @@ Once all subagents finish, present two tables:
 
 **Researched (in-review)** — `match_score` ≥ 5, sorted by `match_score` descending:
 
-| Company | Industry | Match | Headcount | Why it fits (one line) | File path |
+| Company | Source | Industry | Match | Headcount | Why it fits (one line) | File path |
+
+The `Source` column should use the labels from step 3c (`Discovery (YC W25)`, `Look-alike (Linear)`, `Seed (ideas.md)`, etc.) so the user can see at a glance whether the round actually surfaced unknowns or just regurgitated their existing list.
 
 **Not interested** — pre-filter cuts from step 4 plus subagent cuts (`match_score` ≤ 4):
 
@@ -181,6 +202,7 @@ The subagent should investigate:
 
 ## Constraints
 
+- **Bias toward companies the user is unlikely to already know.** Famous unicorns (Stripe, Notion, Figma class) are fine to include if they fit, but they don't count toward the Discovery quota in step 3b. If a round comes back with only household names, redo candidate generation with heavier weight on YC/Wellfound directory pages 2–5.
 - **Never invent facts.** If something can't be verified, omit it or say "not publicly disclosed."
 - **Never create a duplicate file.** Always check `companies/{in-review,interested,not-interested}/<slug>.md` before writing; skip if any exists.
 - **Never re-surface a not-interested company.** Anything in `companies/not-interested/` is final unless the user explicitly removes it.

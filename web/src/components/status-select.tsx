@@ -47,18 +47,46 @@ export function StatusSelect(props: StatusSelectProps) {
   const palette =
     (value && (paletteMap as Record<string, string>)[value]) || STATUS_FALLBACK;
 
+  const applyStatus = async (target: string) => {
+    if (props.kind === "application") {
+      await updateApplication(props.id, { status: target as ApplicationStatus });
+    } else {
+      await updateCompanyStatus(props.id, target as CompanyStatus);
+    }
+  };
+
   const handleChange = (next: string | null) => {
     if (!next) return;
     const prev = value;
     setValue(next);
     startTransition(async () => {
       try {
-        if (props.kind === "application") {
-          await updateApplication(props.id, { status: next as ApplicationStatus });
-        } else {
-          await updateCompanyStatus(props.id, next as CompanyStatus);
-        }
-        toast.success(`Status changed to ${humanizeSlug(next)}`);
+        await applyStatus(next);
+        toast.success(
+          `Status changed to ${humanizeSlug(next)}`,
+          prev
+            ? {
+                action: {
+                  label: "Undo",
+                  onClick: () => {
+                    setValue(prev);
+                    startTransition(async () => {
+                      try {
+                        await applyStatus(prev);
+                        toast.success(`Reverted to ${humanizeSlug(prev)}`);
+                        router.refresh();
+                      } catch (err) {
+                        toast.error("Failed to undo status change", {
+                          description: (err as Error).message,
+                        });
+                        setValue(next);
+                      }
+                    });
+                  },
+                },
+              }
+            : undefined,
+        );
         // Server action already calls revalidatePath; router.refresh() makes
         // the client actually re-fetch so tab counts update without reload.
         router.refresh();

@@ -54,6 +54,7 @@ export function CompanyDetail({
             { label: "Interested", status: "interested" },
           ]}
           update={updateCompanyStatus.bind(null, company.id)}
+          previousStatus={company.status}
         />
       ) : null}
     </>

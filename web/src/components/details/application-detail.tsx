@@ -22,8 +22,7 @@ export function ApplicationDetail({
   company,
   layout = "page",
 }: ApplicationDetailProps) {
-  const showInReviewActions =
-    layout === "sheet" && application.status === "in-review";
+  const showOpenApplication = layout === "sheet" && !!application.url;
 
   return (
     <ApplicationDetailTabs
@@ -31,7 +30,7 @@ export function ApplicationDetail({
       blocks={blocks}
       body={body}
       company={company ?? null}
-      showInReviewActions={showInReviewActions}
+      showOpenApplication={showOpenApplication}
     />
   );
 }

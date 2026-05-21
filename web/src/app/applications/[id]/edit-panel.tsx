@@ -10,10 +10,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/glass-card";
-import { humanizeSlug, dateInputValue } from "@/lib/format";
+import { humanizeSlug } from "@/lib/format";
 import {
   APPLICATION_STATUSES,
   APPLICATION_SOURCES,
@@ -33,25 +32,21 @@ export function EditPanel({ application }: EditPanelProps) {
 
   const [status, setStatus] = useState<string>(application.status ?? NONE);
   const [source, setSource] = useState<string>(application.source ?? NONE);
-  const [dateFound, setDateFound] = useState(dateInputValue(application.dateFound));
   const [salaryMin, setSalaryMin] = useState(application.salaryMin?.toString() ?? "");
   const [salaryMax, setSalaryMax] = useState(application.salaryMax?.toString() ?? "");
   const [matchScore, setMatchScore] = useState(application.matchScore?.toString() ?? "");
   const [location, setLocation] = useState(application.location ?? "");
   const [url, setUrl] = useState(application.url ?? "");
-  const [notes, setNotes] = useState(application.notes ?? "");
 
   function save() {
     const patch: ApplicationUpdate = {
       status: status === NONE ? null : (status as Application["status"]),
       source: source === NONE ? null : (source as Application["source"]),
-      dateFound: dateFound || null,
       salaryMin: salaryMin === "" ? null : Number(salaryMin),
       salaryMax: salaryMax === "" ? null : Number(salaryMax),
       matchScore: matchScore === "" ? null : Number(matchScore),
       location: location || null,
       url: url || null,
-      notes: notes || null,
     };
     setPending(true);
     startTransition(async () => {
@@ -111,15 +106,6 @@ export function EditPanel({ application }: EditPanelProps) {
         </Select>
       </Field>
 
-      <Field label="Date Found">
-        <Input
-          type="date"
-          value={dateFound}
-          onChange={(e) => setDateFound(e.target.value)}
-          className="rounded-xl"
-        />
-      </Field>
-
       <div className="grid grid-cols-2 gap-3">
         <Field label="Salary Min ($)">
           <Input
@@ -164,14 +150,6 @@ export function EditPanel({ application }: EditPanelProps) {
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           className="rounded-xl"
-        />
-      </Field>
-
-      <Field label="Notes">
-        <Textarea
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          className="min-h-[120px] rounded-xl"
         />
       </Field>
 

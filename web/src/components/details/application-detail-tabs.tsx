@@ -1,15 +1,15 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Check, Copy, NotebookText, Pencil } from "lucide-react";
+import { Check, Copy, ExternalLink, NotebookText, Pencil } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GlassCard } from "@/components/glass-card";
 import { MarkdownBlocks } from "@/components/markdown-blocks";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { NotesPanel } from "@/app/applications/[id]/notes-panel";
 import { updateApplicationAnswerSection } from "@/app/applications/[id]/actions";
 import {
   blocksToPlainText,
@@ -19,9 +19,6 @@ import {
 import { formatSalaryRange, humanizeSlug } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useTabIndicator } from "@/lib/use-tab-indicator";
-import { StatusActionBar } from "@/components/status-action-bar";
-import { updateApplication } from "@/app/applications/[id]/actions";
-import { type ApplicationStatus } from "@/lib/types";
 import type {
   Application,
   Company,
@@ -34,15 +31,15 @@ interface ApplicationDetailTabsProps {
   /** Raw markdown body — used by the per-section editors in the Answers tab. */
   body: string;
   company: Company | null;
-  /** When true and the JD tab is active, renders the in-review action bar
-   *  pinned to the bottom of the panel. */
-  showInReviewActions?: boolean;
+  /** When true and the JD tab is active, renders a single "Open application"
+   *  button pinned to the bottom of the panel that opens the external job
+   *  posting URL. */
+  showOpenApplication?: boolean;
 }
 
 const DETAIL_TABS = [
   { value: "jd", label: "Job description" },
   { value: "answers", label: "Answers" },
-  { value: "notes", label: "Notes" },
 ] as const;
 
 export function ApplicationDetailTabs({
@@ -50,7 +47,7 @@ export function ApplicationDetailTabs({
   blocks,
   body,
   company,
-  showInReviewActions = false,
+  showOpenApplication = false,
 }: ApplicationDetailTabsProps) {
   const { jd, sections } = splitApplicationBlocks(blocks, body);
   const [active, setActive] = React.useState<string>("jd");
@@ -118,20 +115,12 @@ export function ApplicationDetailTabs({
         </TabsList>
       </div>
 
-      {/* Tab 3 — Notes */}
-      <TabsContent
-        value="notes"
-        className="flex-1 overflow-y-auto pt-4 pb-4"
-      >
-        <NotesPanel application={application} />
-      </TabsContent>
-
       {/* Tab 2 — Job Description */}
       <TabsContent
         value="jd"
         className={cn(
           "flex-1 space-y-4 overflow-y-auto pt-4",
-          showInReviewActions ? "pb-20" : "pb-4",
+          showOpenApplication ? "pb-20" : "pb-4",
         )}
       >
         <QuickFacts application={application} company={company} jd={jd} />
@@ -185,14 +174,13 @@ export function ApplicationDetailTabs({
         })}
       </TabsContent>
     </Tabs>
-    {showInReviewActions && active === "jd" ? (
-      <StatusActionBar<ApplicationStatus>
-        actions={[
-          { label: "Not interested", status: "not-interested", variant: "outline" },
-          { label: "Applied", status: "applied" },
-        ]}
-        update={(status) => updateApplication(application.id, { status })}
-      />
+    {showOpenApplication && active === "jd" && application.url ? (
+      <div className="absolute right-0 bottom-0 left-0 z-10 flex gap-2 bg-white/70 px-5 py-3 backdrop-blur-xl dark:bg-zinc-950/40">
+        <Button nativeButton={false} render={<a href={application.url} target="_blank" rel="noreferrer" />} className="flex-1">
+          Open application
+          <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
+        </Button>
+      </div>
     ) : null}
     </>
   );
@@ -245,7 +233,27 @@ function QuickFacts({
   const size = company?.size ?? null;
   const industries = company?.industry ?? [];
 
+  const companyName = application.companyName ?? company?.name ?? null;
+  const companySlug = application.companyIds[0] ?? null;
+
   const rows: Array<{ label: string; value: React.ReactNode }> = [
+    {
+      label: "Company",
+      value: companyName ? (
+        companySlug ? (
+          <Link
+            href={`/companies?selected=${encodeURIComponent(companySlug)}`}
+            className="text-zinc-800 underline-offset-2 hover:underline dark:text-zinc-200"
+          >
+            {companyName}
+          </Link>
+        ) : (
+          companyName
+        )
+      ) : (
+        <NotListed />
+      ),
+    },
     {
       label: "Compensation",
       value: salary && salary !== "—" ? salary : <NotListed />,

@@ -9,8 +9,9 @@ import { GlassCard } from "@/components/glass-card";
 import { StatusSelect } from "@/components/status-select";
 import { TabBar } from "@/components/tab-bar";
 import { APPLICATION_STATUSES, type Application } from "@/lib/types";
-import { formatDate, formatSalaryRange } from "@/lib/format";
+import { formatSalaryRange } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { useApplicationsSearch } from "./search-context";
 
 type TabSpec = { value: string; label: string };
 
@@ -31,6 +32,19 @@ export function ApplicationsTabs({ applications }: { applications: Application[]
   const searchParams = useSearchParams();
   const selectedId = searchParams.get("selected");
   const [active, setActive] = React.useState("all");
+  const search = useApplicationsSearch();
+  const query = (search?.query ?? "").trim().toLowerCase();
+
+  const visible = React.useMemo(() => {
+    if (!query) return applications;
+    return applications.filter((a) => {
+      const haystack = [a.title, a.companyName, a.location]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(query);
+    });
+  }, [applications, query]);
 
   // When the panel is open, swapping tabs should auto-select the first row of
   // the new tab. If the currently-selected row already belongs to the new tab,
@@ -40,18 +54,18 @@ export function ApplicationsTabs({ applications }: { applications: Application[]
     if (!selectedId) return; // panel closed — leave URL alone
     const rows =
       active === "all"
-        ? applications
-        : applications.filter((a) => a.status === active);
+        ? visible
+        : visible.filter((a) => a.status === active);
     if (rows.some((r) => r.id === selectedId)) return;
     const next = rows[0]?.id ?? "__empty__";
     if (next === selectedId) return;
     router.replace(`${pathname}?selected=${encodeURIComponent(next)}`);
-  }, [active, selectedId, applications, router, pathname]);
+  }, [active, selectedId, visible, router, pathname]);
 
   const counts = new Map<string, number>();
-  counts.set("all", applications.length);
+  counts.set("all", visible.length);
   for (const status of APPLICATION_STATUSES) counts.set(status, 0);
-  for (const app of applications) {
+  for (const app of visible) {
     if (app.status && counts.has(app.status)) {
       counts.set(app.status, counts.get(app.status)! + 1);
     }
@@ -64,8 +78,8 @@ export function ApplicationsTabs({ applications }: { applications: Application[]
       {TABS.map((tab) => {
         const rows =
           tab.value === "all"
-            ? applications
-            : applications.filter((a) => a.status === tab.value);
+            ? visible
+            : visible.filter((a) => a.status === tab.value);
         return (
           <TabsContent
             key={tab.value}
@@ -100,16 +114,17 @@ export function ApplicationsTabs({ applications }: { applications: Application[]
                                 {app.companyName}
                               </span>
                             ) : null}
-                            {app.location ? <span>{app.location}</span> : null}
                             {app.salaryMin != null || app.salaryMax != null ? (
                               <span>
                                 {formatSalaryRange(app.salaryMin, app.salaryMax)}
                               </span>
                             ) : null}
                           </div>
-                        </div>
-                        <div className="hidden text-xs text-zinc-500 sm:block">
-                          {formatDate(app.dateFound)}
+                          {app.location ? (
+                            <div className="mt-0.5 text-xs text-zinc-500">
+                              {app.location}
+                            </div>
+                          ) : null}
                         </div>
                         <StatusSelect kind="application" id={app.id} status={app.status} />
                         <ChevronRight className="h-4 w-4 text-zinc-400 transition-transform duration-150 group-hover:translate-x-0.5 dark:text-zinc-500" />

@@ -10,6 +10,10 @@ import {
 import { DataNotConfiguredError } from "@/lib/markdown-store";
 import type { Application, Company, RenderableBlock } from "@/lib/types";
 import { ApplicationsTabs } from "./tabs";
+import {
+  ApplicationsSearchProvider,
+  ApplicationsSearchInput,
+} from "./search-context";
 import { DetailSheet } from "@/components/detail-sheet";
 import { ApplicationDetail } from "@/components/details/application-detail";
 import { EmptyStateCard } from "@/components/empty-state-card";
@@ -71,9 +75,11 @@ export default async function ApplicationsPage({ searchParams }: PageProps) {
   return (
     <div className="flex h-full flex-col lg:flex-row">
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden lg:mx-auto lg:max-w-3xl">
+        <ApplicationsSearchProvider>
         <div className="flex h-full w-full flex-col gap-4 px-4 pt-4 md:pl-0">
           <PageHeader
             title="Applications"
+            right={applications.length > 0 ? <ApplicationsSearchInput /> : undefined}
             info={
               <div className="space-y-3">
                 <p>
@@ -179,12 +185,12 @@ export default async function ApplicationsPage({ searchParams }: PageProps) {
             )}
           </div>
         </div>
+        </ApplicationsSearchProvider>
       </div>
       <DetailSheet
         open={panelOpen}
         title={detail?.application.title ?? "No application"}
         subtitle={detail?.application.companyName ?? null}
-        href={detail?.application.url ?? null}
       >
         {detail ? (
           <ApplicationDetail

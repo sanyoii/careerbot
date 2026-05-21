@@ -15,11 +15,15 @@ interface StatusAction<T extends string> {
 interface StatusActionBarProps<T extends string> {
   actions: StatusAction<T>[];
   update: (status: T) => Promise<void>;
+  /** When provided, the success toast includes an Undo action that reverts
+   *  back to this status. */
+  previousStatus?: T | null;
 }
 
 export function StatusActionBar<T extends string>({
   actions,
   update,
+  previousStatus,
 }: StatusActionBarProps<T>) {
   const router = useRouter();
   const [pending, setPending] = React.useState<T | null>(null);
@@ -29,7 +33,29 @@ export function StatusActionBar<T extends string>({
     (async () => {
       try {
         await update(status);
-        toast.success(`Status changed to ${humanizeSlug(status)}`);
+        toast.success(
+          `Status changed to ${humanizeSlug(status)}`,
+          previousStatus
+            ? {
+                action: {
+                  label: "Undo",
+                  onClick: async () => {
+                    try {
+                      await update(previousStatus);
+                      toast.success(
+                        `Reverted to ${humanizeSlug(previousStatus)}`,
+                      );
+                      router.refresh();
+                    } catch (err) {
+                      toast.error("Failed to undo status change", {
+                        description: (err as Error).message,
+                      });
+                    }
+                  },
+                },
+              }
+            : undefined,
+        );
         router.refresh();
       } catch (err) {
         toast.error("Failed to update status", {

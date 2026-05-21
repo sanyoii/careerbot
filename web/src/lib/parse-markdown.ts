@@ -73,7 +73,7 @@ function walk(tokens: Token[], out: RenderableBlock[]): void {
         out.push({
           kind: "code",
           text: [{
-            text: c.text,
+            text: decodeEntities(c.text),
             bold: false, italic: false, code: false,
             underline: false, strikethrough: false, href: null,
           }],
@@ -174,7 +174,25 @@ function inline(tokens: Token[], ctx: InlineCtx = BASE_CTX): InlineSegment[] {
 }
 
 function toSegment(text: string, ctx: InlineCtx): InlineSegment {
-  return { text, ...ctx };
+  return { text: decodeEntities(text), ...ctx };
+}
+
+// marked's lexer returns text with HTML entities pre-encoded (e.g. `'` becomes
+// `&#39;`). React then escapes the `&` so the entity renders literally. Decode
+// the common ones back to their characters before handing the text to React.
+function decodeEntities(s: string): string {
+  if (!s.includes("&")) return s;
+  return s
+    .replace(/&#x([\da-f]+);/gi, (_, hex) =>
+      String.fromCodePoint(parseInt(hex, 16)),
+    )
+    .replace(/&#(\d+);/g, (_, dec) => String.fromCodePoint(parseInt(dec, 10)))
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&");
 }
 
 function detectEmojiPrefix(tokens: Token[]): string | null {

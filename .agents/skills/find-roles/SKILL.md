@@ -38,6 +38,30 @@ ls applications/*/<company-slug>/*.md 2>/dev/null
 
 For each existing file, grep out the `url:` and `ats_id:` values from the frontmatter. Collect them into a set. Any posting matching one of these is already on file and must be skipped. **Crucially: don't re-surface roles you were rejected from, withdrew from, or marked not interested**, so the skip applies across all seven status folders, not just `applied/` and `in-review/`.
 
+### 1.5. Scan job boards via WebSearch
+
+If `context/preferences.md` contains a `## Job Boards` section, run this phase **before** the per-company loop.
+
+For each `site:` domain listed under `## Job Boards`:
+
+1. **Build the query** from `preferences.md`:
+   - Titles: join `role.titles` with ` OR ` and quote each → `("Senior QA Engineer" OR "Senior SDET" OR "Senior Test Engineer")`
+   - Location hint: if `open_to_remote: true` add `remote`; otherwise use the first `preferred_cities` entry
+   - Example: `site:jobuzzer.com ("Senior QA Engineer" OR "Senior SDET" OR "Senior Test Engineer") remote`
+
+2. **Run WebSearch** with the query. Collect every job-posting URL returned that belongs to the target domain (discard aggregator result snippets pointing elsewhere).
+
+3. **For each URL collected:**
+   a. Apply the dedup check from step 1 — skip if already in any `applications/` subfolder.
+   b. Attempt `WebFetch` on the individual page. If it returns a non-200 or the content is empty, log `"[job-board skip] <url>: fetch failed"` and move on — do not abort the whole scan.
+   c. If the fetch succeeds, run the same match filter as step 3 (title, location, comp, avoid list). Skip non-matches.
+   d. For matches, proceed through steps 4–8 exactly as for company career-page roles. Infer the company name from the page content or URL. If the company is not already in `companies/`, spawn the `/add-company` sub-workflow to create a stub profile.
+   e. Set `source: other` in the application frontmatter (jobuzzer.com is not a known ATS).
+
+4. **If WebSearch returns zero results** for a domain, log `"[job-board] <domain>: no results"` and continue.
+
+After this phase completes, proceed with the normal per-company loop (steps 2 onward).
+
 ### 2. Locate the careers page
 
 Check the company's profile body (`companies/interested/<slug>.md`) for an explicit careers URL first — usually under the `## Open roles` heading. If none, use WebSearch to find the official careers/jobs page (Greenhouse, Lever, Ashby, Workday, or in-house). Prefer the canonical job board over aggregators (LinkedIn, Indeed) — the canonical board has the real ATS IDs and application questions.
